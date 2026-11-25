@@ -69,6 +69,9 @@ Build Kokkos for AMD GPU (``GFX90A`` architecture), and append the install locat
 
 A C++ compiler supporting C++20 is required.
 
+Kokkos can also be built with ``-DKokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE:BOOL=ON``, which compiles its sources with CMake's HIP language instead of with ``hipcc`` as C++ compiler.
+Lightning-Kokkos then compiles its Kokkos sources and the Python module with the same HIP compiler, and the C++ compiler can be any host compiler.
+
 Install Lightning-Kokkos
 ^^^^^^^^^^^^^^^^^^^^^^^^
 

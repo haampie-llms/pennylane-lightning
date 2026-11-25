@@ -135,6 +135,11 @@ endif()
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
+if("lightning_kokkos" IN_LIST PL_BACKEND OR "lightning_amdgpu" IN_LIST PL_BACKEND)
+    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/support_kokkos.cmake")
+    EnableKokkosLanguage()
+endif()
+
 # All CMakeLists.txt in subdirectories use pennylane_lightning_compile_options and pennylane_lightning_external_libs
 add_subdirectory(pennylane_lightning/core)
 
@@ -200,6 +205,10 @@ if(ENABLE_PYTHON)
 
     set_target_properties("${PL_BACKEND}_ops" PROPERTIES CXX_VISIBILITY_PRESET hidden)
     target_compile_definitions("${PL_BACKEND}_ops" PRIVATE VERSION_INFO=${VERSION_STRING})
+
+    if("${PL_BACKEND}" STREQUAL "lightning_kokkos" OR "${PL_BACKEND}" STREQUAL "lightning_amdgpu")
+        SetKokkosLanguage("${PL_BACKEND}_ops")
+    endif()
 endif()
 
 install(TARGETS pennylane_lightning

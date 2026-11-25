@@ -4,6 +4,7 @@ project(lightning_kokkos_catalyst LANGUAGES CXX)
 
 set(LK_CATALYST_FILES LightningKokkosSimulator.cpp CACHE INTERNAL "")
 add_library(lightning_kokkos_catalyst SHARED ${LK_CATALYST_FILES})
+SetKokkosLanguage(lightning_kokkos_catalyst)
 
 include(FetchContent)
 
