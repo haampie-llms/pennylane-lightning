@@ -7,20 +7,55 @@ include_guard()
 
 set(KOKKOS_VERSION 5.1.0)
 
+set(KOKKOS_HINTS    ${pennylane_lightning_SOURCE_DIR}/kokkos
+                    ${pennylane_lightning_SOURCE_DIR}/Kokkos
+                    ${Kokkos_Core_DIR}
+                    /usr
+                    /usr/local
+                    /opt
+                    /opt/Kokkos
+)
+
+# Kokkos built with Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE compiles its sources
+# with CMake's CUDA or HIP language instead of CXX, and so must every source that
+# includes Kokkos. This macro enables that language, and must be called from the
+# top-level directory, which also builds the Python module.
+macro(EnableKokkosLanguage)
+    find_package(Kokkos QUIET HINTS ${KOKKOS_HINTS})
+    if(Kokkos_COMPILE_LANGUAGE AND NOT Kokkos_COMPILE_LANGUAGE STREQUAL CXX)
+        enable_language(${Kokkos_COMPILE_LANGUAGE})
+        set(CMAKE_${Kokkos_COMPILE_LANGUAGE}_ARCHITECTURES
+            ${Kokkos_${Kokkos_COMPILE_LANGUAGE}_ARCHITECTURES})
+    endif()
+endmacro()
+
+# Compile the C++ sources of the given targets with the language enabled by
+# EnableKokkosLanguage, with the same symbol visibility as for C++, and link
+# them with that language where C++ was set as linker language (as nanobind
+# does). Call it from the directory that defines the targets.
+function(SetKokkosLanguage)
+    if(Kokkos_COMPILE_LANGUAGE AND NOT Kokkos_COMPILE_LANGUAGE STREQUAL CXX)
+        foreach(target ${ARGN})
+            get_target_property(sources ${target} SOURCES)
+            set_source_files_properties(${sources} PROPERTIES LANGUAGE ${Kokkos_COMPILE_LANGUAGE})
+            get_target_property(visibility ${target} CXX_VISIBILITY_PRESET)
+            if(visibility)
+                set_target_properties(${target} PROPERTIES ${Kokkos_COMPILE_LANGUAGE}_VISIBILITY_PRESET ${visibility})
+            endif()
+            get_target_property(linker_language ${target} LINKER_LANGUAGE)
+            if(linker_language STREQUAL "CXX")
+                set_target_properties(${target} PROPERTIES LINKER_LANGUAGE ${Kokkos_COMPILE_LANGUAGE})
+            endif()
+        endforeach()
+    endif()
+endfunction()
+
 # Macro to aid in finding Kokkos with 3 potential install options:
 # 1. Fully integrated Kokkos packages and CMake module files
 # 2. Statically compiled libraries and headers
 # 3. Not installed, so fall back to building from source.
 macro(FindKokkos target_name)
-    find_package(Kokkos
-    HINTS   ${pennylane_lightning_SOURCE_DIR}/kokkos
-            ${pennylane_lightning_SOURCE_DIR}/Kokkos
-            ${Kokkos_Core_DIR}
-            /usr
-            /usr/local
-            /opt
-            /opt/Kokkos
-    )
+    find_package(Kokkos HINTS ${KOKKOS_HINTS})
 
     if(Kokkos_FOUND)
         message(STATUS "Found existing Kokkos library.")

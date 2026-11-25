@@ -47,6 +47,7 @@ if(ENABLE_MPI)
 endif()             
 
 add_library(lightning_kokkos STATIC ${LKOKKOS_FILES})
+SetKokkosLanguage(lightning_kokkos)
 target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PLKOKKOS=1")
 target_compile_definitions(lightning_kokkos PUBLIC "_ENABLE_PLKOKKOS=1")
 
